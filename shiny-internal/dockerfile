@@ -1,0 +1,35 @@
+# this is my updated docker file - that will become the new version eventually 
+
+
+FROM rocker/tidyverse:4.0.5
+
+RUN echo "\nwww-frame-origin=any" >> /etc/rstudio/rserver.conf
+
+RUN echo "\nwww-enable-origin-check=0" >> /etc/rstudio/rserver.conf
+
+RUN echo "\nauth-cookies-force-secure=1" >> /etc/rstudio/rserver.conf
+
+RUN /rocker_scripts/install_shiny_server.sh
+
+RUN apt update -qq && apt upgrade -y
+
+RUN apt-get update -qq && apt-get -y --no-install-recommends install \
+  libgsl-dev \
+  libgeos-dev \
+  mesa-common-dev \
+  libglu1-mesa-dev \
+  freeglut3-dev 
+
+RUN install2.r -e --skipinstalled shiny rmarkdown abind annotate AnnotationDbi ape arm arrow askpass assertthat backports base base64enc bench BH BiasedUrn Biobase BiocFileCache BiocGenerics BiocManager BiocParallel BiocVersion biomaRt Biostrings bit bit64 bitops blob boot brew brio broom bslib cachem calibrate callr car carData caret caTools cellranger changepoint class cli cliapp clipr clisymbols clue cluster coda codetools colorspace colourpicker commonmark compiler corpcor covr cowplot cpp11 crayon credentials crosstalk curl cyclocomp cytolib d3heatmap D3partitionR d3r data.table data.tree datasets DBI dbplyr debugme DelayedArray dendextend DEoptimR desc DESeq2 devtools DiagrammeR diffobj diffviewer digest diptest docopt doParallel downloader dplyr dqrng DT dtplyr egg ellipse ellipsis enrichR evaluate fansi farver fastmap fastmatch fda feather fgsea filelock fitdistrplus flowAI flowClust flowCore flowStats flowViz flowWorkspace fmsb FNN foghorn forcats foreach foreign formatR fs fst functional futile.logger futile.options future future.apply gargle gbm gclus gdata genefilter geneplotter generics GenomeInfoDb GenomeInfoDbData GenomicRanges GEOquery gert GGally ggbiplot ggcyto ggplot2 ggrepel ggridges gh git2r gitcreds globals glue gmailr googledrive googlesheets googlesheets4 GOsummaries gower GPArotation gplots gProfileR graph graphics grDevices grid gridExtra gsl gtable gtools haven heatmaply hexbin highlight highr hms htmltools htmlwidgets httpuv httr hunspell hwriter ica IDPmisc ids igraph influenceR ini ipred IRanges irlba isoband iterators itertools jpeg jquerylib jsonlite kableExtra KEGG.db KEGGgraph KEGGREST kernlab KernSmooth knitr ks labeling Lahman lambda.r later lattice latticeExtra lava lavaan lazyeval leiden lifecycle limma lintr listenv littler lme4 lmtest locfit lpSolve lubridate magrittr manipulateWidget maptools markdown MASS Matrix matrixcalc MatrixModels matrixStats MBESS mclust memoise methods mgcv mi microbenchmark mime miniUI minpack.lm minqa missForest mnormt mockery ModelMetrics modelr multicool munsell mvtnorm ncdfFlow nlme nloptr nnet numDeriv nycflights13 openCyto OpenMx openssl openxlsx org.Hs.eg.db org.Mm.eg.db org.Rn.eg.db outliers packrat pak pander parallel parsedate patchwork pathview pbapply pbivnorm pbkrtest pcaPP peakPick pheatmap pillar pingr pkgbuild pkgcache pkgconfig pkgdown pkgload plogr plotly plyr png praise prettycode prettyunits pROC processx prodlim profmem progress promises ps psych purrr pwr qap quantreg R.methodsS3 R.oo R.utils R6 randomForest RANN rappdirs RBGL rcmdcheck RColorBrewer Rcpp RcppAnnoy RcppArmadillo RcppEigen RcppParallel RcppProgress RCurl readr readxl recipes registry rematch rematch2 remotes reprex reshape reshape2 reticulate rex rgl Rgraphviz rhandsontable Rhdf5lib rhub rintrojs rio rjson RJSONIO rlang RMariaDB rmarkdown RMySQL robustbase ROCR roxygen2 rpart rpf Rphenograph RPostgres RPostgreSQL rprojroot RProtoBufLib rrcov rsconnect Rspc RSpectra RSQLite rstudioapi rsvd Rtsne rversions rvest S4Vectors sass scales SCRT sctransform selectr sem semTools seriation sessioninfo Seurat shiny shinyalert shinyBS shinybusy shinycssloaders shinydashboard shinyFiles shinyHeatmaply shinyjs shinyRGL shinysky shinyWidgets sitmo snow sourcetools sp SparseM spatial spelling splines splitstackshape SQUAREM StanHeaders statmod stats stats4 stringi stringr SummarizedExperiment sunburstR SuppDists survival sys tcltk testit testthat tibble tidyr tidyselect tidyverse timeDate tinytex titanic tools toOrdinal tsne TSP tximport ufs userfriendlyscience usethis utf8 utils uuid uwot vctrs VennDiagram viridis viridisLite visNetwork vroom waldo webfakes webshot whisker whoami withr xfun XML xml2 xmlparsedata xopen xtable XVector yaml zip zlibbioc zoo Seurat; exit 0
+
+COPY installpackages.r /etc/cont-init.d/installpackages.r 
+
+RUN sudo r /etc/cont-init.d/installpackages.r 
+
+COPY index.html /home/rstudio/ShinyApps/index.html
+
+RUN rm -f /srv/shiny-server/Shinyapps && cd /srv/shiny-server/ && ln -s /home/rstudio/ShinyApps ShinyApps
+
+RUN rm -f /srv/shiny-server/shinyadmin && cd /srv/shiny-server/ && ln -s /home/rstudio/ShinyApps shinyadmin
+
+RUN mv /usr/local/lib/R/site-library /usr/local/lib/R/site-library.orig && cd /usr/local/lib/R/ && ln -s /home/rstudio/packages site-library
